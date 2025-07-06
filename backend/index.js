@@ -53,8 +53,8 @@ app.post('/api/matrix-auth', verifyFirebaseToken, async (req, res) => {
   } catch (error) {
     // If the user is already registered, ignore the error
     if (error.message !== 'User ID already taken.') {
-      console.error('Error registering Matrix user:', error);
-      return res.status(500).send('Could not register Matrix user.');
+      console.error('Error registering Matrix user:', error.message, error.body);
+      return res.status(500).send(`Could not register Matrix user: ${error.message || JSON.stringify(error.body)}`);
     }
   }
 
@@ -77,8 +77,8 @@ app.post('/api/matrix-auth', verifyFirebaseToken, async (req, res) => {
       homeserverUrl: homeserverUrl,
     });
   } catch (error) {
-    console.error('Error logging into Matrix:', error);
-    res.status(500).send('Could not log into Matrix.');
+    console.error('Error logging into Matrix:', error.message, error.body);
+    res.status(500).send(`Could not log into Matrix: ${error.message || JSON.stringify(error.body)}`);
   }
 });
 
