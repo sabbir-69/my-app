@@ -9,6 +9,7 @@ import 'top_bar.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'more_page.dart'; // Import the new MorePage
+import 'chat_list_page.dart'; // Import the new ChatListPage
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,6 +50,9 @@ Future<void> _uploadMockDataToFirestore() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Hive initialization removed as InMemoryDatabase is used in MatrixService.
+  // If persistent storage is needed, re-add hive and hive_flutter and configure MatrixService accordingly.
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -113,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const FriendPage(),
     const NotificationPage(),
     const Center(child: Text('SOS Page (Placeholder)')),
-    const Center(child: Text('Chat Page (Placeholder)')),
+    const ChatListPage(), // Use the new ChatListPage
     const MorePage(), // Use the actual MorePage
   ];
 
