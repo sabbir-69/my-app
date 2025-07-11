@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_app/services/matrix_service.dart'; // Import MatrixService
 
 import 'dart:ui'; // Import for ImageFilter
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final MatrixService matrixService; // Add MatrixService parameter
+
+  const LoginPage({Key? key, required this.matrixService}) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -14,26 +17,75 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  // final MatrixService _matrixService = MatrixService(); // Instantiate MatrixService - now passed in
 
   String? _errorMessage;
+  bool _isLoading = false; // Add loading state
+
+  @override
+  void initState() {
+    super.initState();
+    // _initializeMatrixClient(); // Removed initialization call
+  }
+
+  // Future<void> _initializeMatrixClient() async { // Removed initialization method
+  //   setState(() {
+  //     _isLoading = true; // Start loading
+  //   });
+  //   try {
+  //     await _matrixService.init();
+  //   } catch (e) {
+  //     setState(() {
+  //       _errorMessage = 'Matrix client initialization failed: ${e.toString()}';
+  //     });
+  //   } finally {
+  //     setState(() {
+  //       _isLoading = false; // End loading
+  //     });
+  //   }
+  // }
 
   Future<void> _signIn() async {
+    setState(() {
+      _errorMessage = null; // Clear previous errors
+      _isLoading = true; // Start loading for sign-in
+    });
+
     try {
+      // Ensure Matrix client is initialized before attempting login
+      if (!widget.matrixService.matrixClient.isLogged()) { // Check if client is not already logged in
+        bool matrixLoginSuccess = await widget.matrixService.loginMatrixUser(
+          _emailController.text.trim(), // Use email as matrixId for now
+          _passwordController.text.trim(),
+        );
+
+        if (!matrixLoginSuccess) {
+          setState(() {
+            _errorMessage = 'Matrix login failed. Please check your credentials.';
+          });
+          return; // Stop if Matrix login fails
+        }
+      }
+
+      // If Matrix login is successful or already logged in, proceed with Firebase login
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // Navigate to home page or dashboard upon successful login
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = e.message ?? 'An unknown Firebase Auth error occurred.';
+        _errorMessage = e.message ?? 'Firebase authentication failed.';
       });
     } catch (e) {
       setState(() {
         _errorMessage = 'An unexpected error occurred: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false; // End loading
       });
     }
   }
@@ -115,20 +167,22 @@ class _LoginPageState extends State<LoginPage> {
                           textAlign: TextAlign.center,
                         ),
                       const SizedBox(height: 16.0),
-                      ElevatedButton(
-                        onPressed: _signIn,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF006A4E), // connect-green
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ),
+                      _isLoading
+                          ? const CircularProgressIndicator() // Show loading indicator
+                          : ElevatedButton(
+                              onPressed: _signIn,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF006A4E), // connect-green
+                                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(fontSize: 18, color: Colors.white),
+                              ),
+                            ),
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacementNamed('/signup');

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Keep this import for MethodChannel if needed later, though not directly used in this main.dart
+import 'package:my_app/services/matrix_service.dart'; // Import MatrixService
 
 import 'bottom_nav.dart';
 import 'feed_tabs.dart';
@@ -50,21 +51,26 @@ Future<void> _uploadMockDataToFirestore() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Hive initialization removed as InMemoryDatabase is used in MatrixService.
-  // If persistent storage is needed, re-add hive and hive_flutter and configure MatrixService accordingly.
 
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Initialize MatrixService
+  final MatrixService matrixService = MatrixService();
+  await matrixService.init(); // Await initialization
+
   // Upload mock data to Firestore on app start (only once)
   await _uploadMockDataToFirestore();
 
-  runApp(const MyApp());
+  runApp(MyApp(matrixService: matrixService)); // Pass MatrixService to MyApp
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final MatrixService matrixService; // Add MatrixService parameter
+
+  const MyApp({Key? key, required this.matrixService}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -87,22 +93,24 @@ class MyApp extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasData) {
-            return const MyHomePage();
+            return MyHomePage(matrixService: matrixService); // Pass MatrixService
           }
-          return const LoginPage();
+          return LoginPage(matrixService: matrixService);
         },
       ),
       routes: {
-        '/login': (context) => const LoginPage(),
+        '/login': (context) => LoginPage(matrixService: matrixService),
         '/signup': (context) => const SignUpPage(),
-        '/home': (context) => const MyHomePage(),
+        '/home': (context) => MyHomePage(matrixService: matrixService), // Pass MatrixService
       },
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final MatrixService matrixService; // Add MatrixService parameter
+
+  const MyHomePage({Key? key, required this.matrixService}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();

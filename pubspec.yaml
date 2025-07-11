@@ -45,6 +45,8 @@ dependencies:
   jitsi_meet_flutter_sdk: ^11.2.0 # Updated to latest version to fix namespace issue
   uuid: ^4.5.0 # Updated to latest version
   shared_preferences: ^2.0.0
+  sqflite: ^2.0.0 # Add sqflite for MatrixSdkDatabase on native platforms
+  path: ^1.8.0 # Add path for database path management
 
 dev_dependencies:
   flutter_test:

@@ -18,7 +18,7 @@ admin.initializeApp({
 });
 
 // Your Matrix homeserver URL
-const homeserverUrl = 'https://matrix.org'; // Replace with your homeserver URL
+const homeserverUrl = 'https://my-app-jw9y.onrender.com'; // Replace with your homeserver URL
 
 // Middleware to verify Firebase ID Token
 const verifyFirebaseToken = async (req, res, next) => {

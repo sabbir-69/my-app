@@ -7,13 +7,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:my_app/main.dart';
+import 'package:my_app/services/matrix_service.dart'; // Import MatrixService
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // Create a dummy MatrixService instance for testing
+    final matrixService = MatrixService();
+    await matrixService.init();
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(matrixService: matrixService));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

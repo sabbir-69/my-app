@@ -4,12 +4,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
 
 class MatrixService {
   late final Client matrixClient;
 
+  MatrixService() {
+    // _initializeMatrixClient(); // Initialization is now done in init()
+  }
+
   Future<void> init() async {
-    final db = await MatrixSdkDatabase.init('my_matrix_db');
+    // Open the database using sqflite
+    final databasePath = await getDatabasesPath();
+    final path = join(databasePath, 'matrix_client.db');
+    final sqfliteDatabase = await openDatabase(path);
+
+    final db = await MatrixSdkDatabase.init(
+      'https://my-app-jw9y.onrender.com', // Replace with your actual homeserver URL
+      database: sqfliteDatabase, // Pass the sqflite database instance
+    );
     matrixClient = Client(
       'https://my-app-jw9y.onrender.com', // Replace with your actual homeserver URL
       database: db,
@@ -27,16 +41,19 @@ class MatrixService {
     await prefs.setString(_matrixIdKey, matrixId);
     await prefs.setString(_accessTokenKey, accessToken);
     await prefs.setString(_deviceIdKey, deviceId);
+    print('DEBUG: Saved Matrix credentials: matrixId=$matrixId, accessToken=$accessToken, deviceId=$deviceId');
   }
 
   /// ✅ Load stored credentials
   Future<Map<String, String?>> getMatrixCredentials() async {
     final prefs = await SharedPreferences.getInstance();
-    return {
+    final credentials = {
       'matrixId': prefs.getString(_matrixIdKey),
       'accessToken': prefs.getString(_accessTokenKey),
       'deviceId': prefs.getString(_deviceIdKey),
     };
+    print('DEBUG: Retrieved Matrix credentials: $credentials');
+    return credentials;
   }
 
   /// ✅ Clear credentials
